@@ -1,0 +1,25 @@
+services:
+  userrelay-1:
+    build:
+      context: .
+    ports:
+      - '8055:8055'
+    volumes:
+      - 'uploads:/directus/uploads'
+      - 'extensions:/directus/extensions'
+      - 'templates:/directus/templates'
+    env_file:
+      - .env
+    environment:
+      DB_SSL__CA: "-----BEGIN CERTIFICATE-----\nMIIEQTCCAqmgAwIBAgIUH9rxYzyIRdgt3xtcsW4UY4ufltUwDQYJKoZIhvcNAQEM\nBQAwOjE4MDYGA1UEAwwvOGQ4NzJiYWQtMmY1Mi00OGZhLWFmZmQtYmQ0MDVkYzVm\nZjA4IFByb2plY3QgQ0EwHhcNMjQxMTE1MDAxMDA1WhcNMzQxMTEzMDAxMDA1WjA6\nMTgwNgYDVQQDDC84ZDg3MmJhZC0yZjUyLTQ4ZmEtYWZmZC1iZDQwNWRjNWZmMDgg\nUHJvamVjdCBDQTCCAaIwDQYJKoZIhvcNAQEBBQADggGPADCCAYoCggGBAMaLaajj\naHMmOab1aOOh1R07+bd6lJfZmbEa3YIdP2d9kQtGrM6p98itWGnhaXaub/TpoBGd\nZUhnN5a+ZERBGRAd0tOkGM5UChaChYH4Ut7QL6y62ezE/kaYhsMYFzHR56Iw4SGN\nNMLE/Akk8+BSZilAwmWRIgZxlR6jtRoTH59XkWkcHNBtqT4v8uOIHXTUKqovROpp\nSJcu982xwhTD42dv9gJQvn1QxiButJwLldhQgUZuNLEK8QRn+1GDiy0snhuWUvGE\n3R5YB1N6+bl7QyhHKfWGK8MKpWmvHFeClSA9PfxjwiWjnaPccDdosVIXs0+/tz6e\njfUSB7/Nzx1B6NFGXd7uqysatUtefR6uhE9DCX0ZJx6rKH6jIuJTKNfHE3qR6EpO\nQ10xJzMsA5fnUFb6DAkHc3WIi0edMJcPvfTKP+fMtep4ScRW/dH8q78/qxOg2xLb\nr7j5Ge4Jv5yUoCqVjgoIpnHFguEse1L92LXt0Bq8FXqNHq49fEMu6YgyjQIDAQAB\noz8wPTAdBgNVHQ4EFgQUtH6LnbzMujP/wo51kcKtVu8DozYwDwYDVR0TBAgwBgEB\n/wIBADALBgNVHQ8EBAMCAQYwDQYJKoZIhvcNAQEMBQADggGBAKeD9PXBRIS3afDr\n/7yXi3vsXZilKQON3DmgiQXQlug+4LfVoBuuWNa7RK33U3LBCPrpez61AiS0lFQg\nJAAzh9wgwc6ZRj59TLJP4inaCej11EWkq9TXHwsXbmFKe+3P8jB5y0pyxUzsUOw6\nUBAIh9BMrWgs0khDaO/hAtiOCQgWkNBV7NBlGOPXAlSGrzbn8gnay8zJN5kLNp3+\nrnz2RbQsUKB79TsR5WbbDYdnbLHgzzcrWHshxe7qhrq7TtxrNXdl5TjXAER4iQbp\njBaSkkJBFniGmHYRHfND18gEWCg4QlYQXgC3iufleQlElY6WjfT5MboyeBkMCs37\nViyudITSNs4Tct/4T/dWTIMW4oWQxakUcjg3bQnCEgg7+MjTSC+rgV0XVqvGSAER\nlxI6iGpTKyqaDMmP3dMbFAAVpD96aRVv/zqGzQeVL3BRSnFZojazhXlBPBsgm+fL\nz3ut8DfX3K8HumhG6jYiAjhI36AdxWOzj75AZvQBY8QNMBB8VQ==\n-----END CERTIFICATE-----\n"
+      # Add more env overrides here if needed
+    healthcheck:
+      test: [ "CMD", "wget", "-q", "--spider", "http://0.0.0.0:8055/admin/login" ]
+      interval: 5s
+      timeout: 20s
+      retries: 10
+
+volumes:
+  uploads: null
+  extensions: null
+  templates: null
