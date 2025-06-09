@@ -53,7 +53,7 @@ ENV NODE_ENV=production \
 COPY --from=builder --chown=node:node /app/ecosystem.config.cjs .
 COPY --from=builder --chown=node:node /app/dist .
 
-EXPOSE 8055
+EXPOSE 8056
 
 # Start Agency OS Directus via PM2
 CMD ["pm2-runtime", "start", "ecosystem.config.cjs"]

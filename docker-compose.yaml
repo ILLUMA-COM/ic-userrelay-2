@@ -3,7 +3,7 @@ services:
     build:
       context: .
     ports:
-      - '8055:8055'
+      - '8056:8056'
     volumes:
       - 'uploads:/directus/uploads'
       - 'extensions:/directus/extensions'
