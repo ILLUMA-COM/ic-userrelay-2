@@ -1,5 +1,5 @@
 services:
-  userrelay-1:
+  userrelay-2:
     build:
       context: .
     ports:
