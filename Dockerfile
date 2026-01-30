@@ -36,10 +36,10 @@ RUN cd extensions/hooks/search-sync \
 # Clean and finalize dist
 RUN cd dist \
   && node -e 'const fs=require("fs");const f="package.json",{name,version,type,exports,bin}=require(`./${f}`),{packageManager}=require(`../${f}`);fs.writeFileSync(f,JSON.stringify({name,version,type,exports,bin,packageManager},null,2));' \
-  && mkdir -p extensions/uploads
+  && mkdir -p extensions
 
-# Copy built extension to dist
-RUN cp -r extensions/hooks/search-sync dist/extensions/
+# Copy built extension to dist/extensions (Directus expects the full package)
+RUN cp -r extensions/hooks/search-sync dist/extensions/directus-extension-search-sync
 
 ##############################################
 ## 🚀 Runtime Stage — Run Agency OS
