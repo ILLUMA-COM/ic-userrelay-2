@@ -107,7 +107,7 @@ export default defineHook(({ action }, { env, logger }) => {
 					'timestamp', Date.now().toString()
 				);
 			}
-			logger.debug(`Search sync: Published ${ids.length} ${eventAction} for ${collection}`);
+			logger.info(`Search sync: Published ${ids.length} ${eventAction} for ${collection}`);
 		} catch (err) {
 			logger.error(`Search sync: Publish failed - ${err}`);
 		}
