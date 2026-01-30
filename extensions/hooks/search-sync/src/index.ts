@@ -41,36 +41,54 @@ function getEntityType(collection: string): string {
 
 export default defineHook(({ action }, { env, logger }) => {
 	let redis: Redis | null = null;
+	let isConnected = false;
 
 	// Initialize Redis connection
 	const redisUrl = env['REDIS_URL'] as string | undefined;
 	
 	if (!redisUrl) {
-		logger.warn('REDIS_URL not configured - search sync disabled');
+		logger.warn('Search sync: REDIS_URL not configured - extension disabled');
 		return;
 	}
 
 	try {
 		redis = new Redis(redisUrl, {
 			maxRetriesPerRequest: 3,
-			retryDelayOnFailover: 100,
+			retryStrategy(times) {
+				// Stop retrying after 5 attempts
+				if (times > 5) {
+					logger.warn('Search sync: Redis connection failed after 5 retries - disabling');
+					return null; // Stop retrying
+				}
+				return Math.min(times * 200, 2000); // Exponential backoff, max 2s
+			},
 			lazyConnect: true,
 		});
 
 		redis.on('error', (err) => {
-			logger.error(`Redis connection error: ${err.message}`);
+			// Only log once, not on every retry
+			if (isConnected) {
+				logger.error(`Search sync: Redis error - ${err.message}`);
+				isConnected = false;
+			}
 		});
 
 		redis.on('connect', () => {
+			isConnected = true;
 			logger.info('Search sync: Redis connected');
 		});
 
-		// Connect immediately
+		redis.on('close', () => {
+			isConnected = false;
+		});
+
+		// Try to connect but don't block startup
 		redis.connect().catch((err) => {
-			logger.error(`Failed to connect to Redis: ${err.message}`);
+			logger.warn(`Search sync: Could not connect to Redis - ${err.message}`);
+			redis = null;
 		});
 	} catch (err) {
-		logger.error(`Failed to initialize Redis: ${err}`);
+		logger.warn(`Search sync: Failed to initialize Redis - ${err}`);
 		return;
 	}
 
@@ -82,7 +100,7 @@ export default defineHook(({ action }, { env, logger }) => {
 		collection: string,
 		ids: string[]
 	): Promise<void> {
-		if (!redis) return;
+		if (!redis || !isConnected) return;
 		if (ids.length === 0) return;
 
 		const dealer = extractDealer(collection);
@@ -104,6 +122,7 @@ export default defineHook(({ action }, { env, logger }) => {
 
 			logger.debug(`Search sync: Published ${ids.length} ${eventAction} events for ${collection}`);
 		} catch (err) {
+			// Log but don't throw - don't break Directus operations
 			logger.error(`Search sync: Failed to publish events - ${err}`);
 		}
 	}
