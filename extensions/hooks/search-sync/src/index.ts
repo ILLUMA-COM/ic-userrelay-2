@@ -32,11 +32,11 @@ export default defineHook(({ action }, { env, logger }) => {
 	let redis: Redis | null = null;
 	let isConnected = false;
 
-	// Use SEARCH_REDIS_URL to avoid conflicts with Directus internal redis config
-	const redisUrl = env['SEARCH_REDIS_URL'];
+	// Use REDIS (same as Directus core)
+	const redisUrl = env['REDIS'];
 	
 	if (!redisUrl) {
-		logger.warn('Search sync: SEARCH_REDIS_URL not configured - extension disabled');
+		logger.warn('Search sync: REDIS not configured - extension disabled');
 		return;
 	}
 
