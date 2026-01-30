@@ -28,10 +28,18 @@ RUN pnpm install --frozen-lockfile \
   && pnpm run build \
   && pnpm --filter directus deploy --prod dist
 
+# Build custom extensions
+RUN cd extensions/hooks/search-sync \
+  && pnpm install \
+  && pnpm run build
+
 # Clean and finalize dist
 RUN cd dist \
   && node -e 'const fs=require("fs");const f="package.json",{name,version,type,exports,bin}=require(`./${f}`),{packageManager}=require(`../${f}`);fs.writeFileSync(f,JSON.stringify({name,version,type,exports,bin,packageManager},null,2));' \
   && mkdir -p extensions/uploads
+
+# Copy built extension to dist
+RUN cp -r extensions/hooks/search-sync dist/extensions/
 
 ##############################################
 ## 🚀 Runtime Stage — Run Agency OS
