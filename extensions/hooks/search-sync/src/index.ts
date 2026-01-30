@@ -43,30 +43,36 @@ export default defineHook(({ action }, { env, logger }) => {
 	let redis: Redis | null = null;
 	let isConnected = false;
 
-	// Initialize Redis connection
-	const redisUrl = env['REDIS_URL'] as string | undefined;
+	// Check for Redis URL - try multiple env var names
+	const redisUrl = env['REDIS_URL'] || env['REDIS_CONNECTION_STRING'] || process.env.REDIS_URL;
+	
+	logger.info(`Search sync: Initializing (REDIS_URL ${redisUrl ? 'found' : 'NOT FOUND'})`);
 	
 	if (!redisUrl) {
-		logger.warn('Search sync: REDIS_URL not configured - extension disabled');
+		logger.warn('Search sync: No Redis URL configured - extension disabled');
+		logger.warn(`Search sync: Available env keys: ${Object.keys(env).join(', ')}`);
 		return;
 	}
 
 	try {
+		// Parse URL to check for TLS (rediss://)
+		const isTLS = redisUrl.startsWith('rediss://');
+		
 		redis = new Redis(redisUrl, {
 			maxRetriesPerRequest: 3,
 			retryStrategy(times) {
-				// Stop retrying after 5 attempts
 				if (times > 5) {
 					logger.warn('Search sync: Redis connection failed after 5 retries - disabling');
-					return null; // Stop retrying
+					return null;
 				}
-				return Math.min(times * 200, 2000); // Exponential backoff, max 2s
+				return Math.min(times * 200, 2000);
 			},
+			// TLS options for DigitalOcean Managed Redis
+			tls: isTLS ? { rejectUnauthorized: false } : undefined,
 			lazyConnect: true,
 		});
 
 		redis.on('error', (err) => {
-			// Only log once, not on every retry
 			if (isConnected) {
 				logger.error(`Search sync: Redis error - ${err.message}`);
 				isConnected = false;
@@ -75,7 +81,7 @@ export default defineHook(({ action }, { env, logger }) => {
 
 		redis.on('connect', () => {
 			isConnected = true;
-			logger.info('Search sync: Redis connected');
+			logger.info('Search sync: Redis connected successfully');
 		});
 
 		redis.on('close', () => {
@@ -110,7 +116,7 @@ export default defineHook(({ action }, { env, logger }) => {
 			for (const id of ids) {
 				await redis.xadd(
 					STREAM_NAME,
-					'*', // Auto-generate ID
+					'*',
 					'action', eventAction,
 					'dealer', dealer,
 					'entity_type', entityType,
@@ -122,7 +128,6 @@ export default defineHook(({ action }, { env, logger }) => {
 
 			logger.debug(`Search sync: Published ${ids.length} ${eventAction} events for ${collection}`);
 		} catch (err) {
-			// Log but don't throw - don't break Directus operations
 			logger.error(`Search sync: Failed to publish events - ${err}`);
 		}
 	}
