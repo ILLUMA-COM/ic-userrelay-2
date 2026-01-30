@@ -28,10 +28,10 @@ RUN pnpm install --frozen-lockfile \
   && pnpm run build \
   && pnpm --filter directus deploy --prod dist
 
-# Build custom extensions
+# Build custom extensions (use npm to isolate from workspace)
 RUN cd extensions/hooks/search-sync \
-  && pnpm install \
-  && pnpm run build
+  && npm install --legacy-peer-deps \
+  && npx directus-extension build
 
 # Clean and finalize dist
 RUN cd dist \
